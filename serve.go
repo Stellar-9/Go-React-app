@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,12 +17,24 @@ type Example struct {
 	Greet string
 }
 
+func LogInformation(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		req := fmt.Sprintf("Request to %s with %s ", r.URL, r.Method)
+		log.Println(req)
+		h.ServeHTTP(w, r)
+
+	})
+
+}
+
 func main() {
 
 	//FileServer := http.FileServer(http.Dir("."))
 	//http.Handle("/", FileServer)
 	mux := mux.NewRouter()
-	mux.HandleFunc("/", hellouniverse).Methods("GET")
+	mux.HandleFunc("/api/v1", hellouniverse).Methods("GET")
+	mux.Use(LogInformation)
 
 	http.ListenAndServe(":8080", mux)
 }
@@ -41,6 +52,8 @@ func hellouniverse(w http.ResponseWriter, r *http.Request) {
 
 	defer resp.Body.Close()
 
+	log.Println("Server status: ", resp.Status)
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		//fmt.Printf("Error!", err)
@@ -54,16 +67,8 @@ func hellouniverse(w http.ResponseWriter, r *http.Request) {
 	responseString := string(body)
 
 	Hello := Example{Greet: fmt.Sprintf("Content: %s", responseString)}
-	tmp, err := template.ParseFiles("index.html")
-	if err != nil {
-		errmsg := fmt.Sprintf("Error while parse a file: %s", err.Error())
-		log.Println(errmsg)
-		http.Error(w, errmsg, http.StatusBadRequest)
-		return
-	}
 
 	w.Header().Set("Content-Type", "applicaton/json")
 	json.NewEncoder(w).Encode(Hello)
-	tmp.Execute(w, Hello)
 
 }
