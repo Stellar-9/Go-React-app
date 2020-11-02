@@ -9,7 +9,9 @@ import (
 )
 
 //declaring test global variable
-var hello = "Hello World!"
+func hello(name string) string {
+	return ("Hello " + name)
+}
 
 func main() {
 
@@ -30,6 +32,6 @@ func main() {
 func HelloWorld(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json") // setup JSON header
-	json.NewEncoder(w).Encode(hello)                   // encoding hello variable to JSON
+	json.NewEncoder(w).Encode(hello())                 // encoding hello variable to JSON
 
 }
